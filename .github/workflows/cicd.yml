@@ -8,7 +8,7 @@ on:
   push:
     branches: [ $default-branch ]
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    tags: [ '[0-9]+.[0-9]+.[0-9]+' ]
 
 jobs:
   Build-Docker-Image:
@@ -92,11 +92,13 @@ jobs:
 
       - name: Install helm
         run: |
-          curl -LO https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
-          tar -zxvf helm-v3.11.0-linux-amd64.tar.gz
+          curl -LO https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+          tar -zxvf helm-v${HELM_VERSION}-linux-amd64.tar.gz
           mv linux-amd64/helm /usr/local/bin/helm
           helm version
+        env:
+          HELM_VERSION: 3.11.0
 
       - name: Deploy
         run: |
-          helm upgrade handbook ./helm-chart --install --namespace=area0 --set image=${{ steps.secrets.outputs.REGISTRY_HOST }}/${{ env.IMAGE_NAME }}:${GITHUB_REF_NAME} --set imageCredentials.registry='${{ steps.secrets.outputs.REGISTRY_HOST }}' --set imageCredentials.username='${{ steps.secrets.outputs.REGISTRY_USERNAME }}' --set imageCredentials.password='${{ steps.secrets.outputs.REGISTRY_PASSWORD }}' --set imageCredentials.email='null@null.com'
+          helm upgrade handbook ./helm-chart --install --namespace=area0 --set image=${{ steps.secrets.outputs.REGISTRY_HOST }}/${{ env.IMAGE_NAME }}:${GITHUB_REF_NAME} --set imageCredentials.registry='${{ steps.secrets.outputs.REGISTRY_HOST }}' --set imageCredentials.username='${{ steps.secrets.outputs.REGISTRY_USERNAME }}' --set imageCredentials.password='${{ steps.secrets.outputs.REGISTRY_PASSWORD }}' --set imageCredentials.email='devnull@area0.tech'
