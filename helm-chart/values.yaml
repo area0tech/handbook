@@ -1,0 +1,8 @@
+project: area0
+imageCredentials: {}
+application:
+  name: handbook
+  image: ""
+  replicaCount: 1
+  port: 3000
+  vhost: "handbook.area0.tech"

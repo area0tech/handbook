@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.application.name | quote }}
+spec:
+  replicas: {{ .Values.application.replicaCount }}
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: {{ .Values.application.name | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.application.name | quote }}
+    spec:
+      containers:
+        - name: {{ .Values.application.name | quote }}
+          imagePullPolicy: Always
+          image: "{{ .Values.image }}"
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 100Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+          ports:
+            - containerPort: {{ .Values.application.port }}
+      {{- if .Values.application.volume }}
+          volumeMounts:
+            - mountPath: {{ .Values.application.volume.path }}
+              name: {{ .Values.application.volume.name | quote }}
+      volumes:
+        - name: {{ .Values.application.volume.name | quote }}
+      {{- end }}
+      imagePullSecrets:
+        - name: registry-key
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 5
+        - key: node.kubernetes.io/unreachable
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 5
+      {{- if ne (int .Values.application.replicaCount) 1 }}
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
+      {{- end }}
